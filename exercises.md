@@ -59,9 +59,9 @@ insert into grade values('07' , '03' , 98)
 
 
 
-## Join Table
+# Join Table
 
-# 1 Find when a student register both course '01' and course '02'.
+## 1 Find when a student register both course '01' and course '02'.
 
 Logic: To find common entries in two tables, we should naturally use inner join.
 
@@ -79,7 +79,7 @@ JOIN
 
 ```
 
-# 2 Find entries whose course '01' has higher score than course '02'
+## 2 Find entries whose course '01' has higher score than course '02'
 
 Logic: Obviously, this is a self-join problem. On column in the table shows course number and another shows the score. So, we can solve it by creating one table containing score for class 1 and another table contain score for class 2. Then, join these two tables by students' ID. After that, student's info can be found in student table. We just do a simple inner join to find out students' info as requsted.
 
@@ -98,10 +98,10 @@ JOIN student s1
   ON tbl1.GId = s1.SId;
 ```
 
-# Remarks
+### Remarks
 The previous two queries funcion similarly. However, we always want to filter as early as possible. In marketing, this is calles marketing funnel.
 
-# Find entries when course '01' exist but course '02' may not exist.
+## Find entries when course '01' exist but course '02' may not exist.
 
 Logic: This is when we should use left(right) join.
 
