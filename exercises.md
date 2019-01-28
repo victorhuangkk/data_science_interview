@@ -118,39 +118,57 @@ left join
   ON g1.GId = g2.GId;
 ```
 
+## Find entries when course '01' do not exist but course '02' exist.
+
+Logic: This case is to find out difference set. However, MySQL dosen't support direct differencing calculation. So, we can use left(right) join to find out null values. Then, use where to constrain that.
+
+```sql
+SELECT GId,
+       cid2 from
+  (SELECT g2.GId, g1.CId AS cid1, g2.CId AS cid2
+   FROM
+       (SELECT *
+      FROM grade
+      WHERE CId = '01') AS g1
+   right join
+     (SELECT *
+      FROM grade
+      WHERE CId = '02') AS g2
+     ON g1.GId = g2.GId) AS tbl1
+WHERE tbl1.cid1 is null;
+```
+
+At the same time, we can use another version, subquery to simplify our calculation. However, it is more expensive.
+
+```sql
+SELECT *
+FROM grade
+WHERE CId = '02'
+  AND GId not in
+    (SELECT GId
+     FROM grade
+     WHERE CId = '01');
+```
+
+## Find records with students who have score in grade table.
+
+Logic: Very similar to previous question. Just use similar
+
+```sql
+SELECT distinct GId,
+                SName,
+                Sage
+FROM grade
+JOIN student
+  ON grade.GId = student.SId;
+
+```
 
 
-Problem 1.3
-查询不存在" 01 "课程但存在" 02 "课程的情况
 
-select GId, cid2 from(
-select g2.GId, g1.CId as cid1, g2.CId as cid2 from
-(select * from grade where CId = '01') as g1 right join
-(select * from grade where CId = '02') as g2
-on g1.GId = g2.GId) as tbl1
-where tbl1.cid1 is null;
+# Simple Select
 
-Easier Version
-
-select * from grade
-where CId = '02'
-and GId not in
-(select GId from grade where CId = '01');
-
-
-Problem 2. 查询平均成绩大于等于 60 分的同学的学生编号和学生姓名和平均成绩
-
-select SId, Sname, AveScore
-from (select GId, avg(score) as AveScore from grade
-group by GId
-having AveScore >= 60) as tbl1 join student on tbl1.GId = student.SId
-order by AveScore DESC;
-
-
-
-## Simple Select
-
-# Find students' info who have records in grade table.
+## Find students' info who have records in grade table.
 
 Logic: Use subquery to select student's ID number in grade table. Add this condition as contraints in where predicates of the main query.
 
@@ -162,31 +180,83 @@ WHERE SId in
      FROM grade);
 ```
 
+## Find the number of teacher who's last name is 'li'.
 
-## Aggregate Functions
+```sql
+select count(TId)
+from teacher
+where Tname like 'li%'
+```
 
-4. 查询所有同学的学生编号、学生姓名、选课总数、所有课程的总成绩(没成绩的显示为 null )
+# Aggregate Functions
 
+## Find records with average socre is at least 60 with students' info and average score.
+
+```sql
+SELECT SId,
+       Sname,
+       AveScore
+FROM
+  (SELECT GId,
+          avg(score) AS AveScore
+   FROM grade
+   GROUP BY GId
+   HAVING AveScore >= 60) AS tbl1
+JOIN student
+  ON tbl1.GId = student.SId
+ORDER BY AveScore DESC;
+```
+
+## Find all students' ID, name, number of registered courses and total score for all courses (no score use null)
+
+Logic: We used two tables in this example. Use student table to fetch all students' information and use grade table to select score that they get from every course.
+
+```sql
 select s1.*, total_courses, total_scores from
 (select GId, count(score) as total_courses, sum(score) as total_scores
 from grade
 group by GId) as tbl1 right join student as s1
 on (tbl1.GId = s1.SId);
+```
 
 
-4.1 查有成绩的学生信息
+# Window Function
 
-select s1.*, total_courses, total_scores from
-(select GId, count(score) as total_courses, sum(score) as total_scores
-from grade
-group by GId) as tbl1 join student as s1
-on (tbl1.GId = s1.SId);
+## Rank by each course's score and show rank, Score ties are assigned the same rank, with the next ranking(s) skipped
 
-5. 查询「李」姓老师的数量
+ ```sql
+select GId,
+       score,
+       rank() over (partition by CId order by score DESC)
+from grade;
+```
 
-select count(TId)
-from teacher
-where Tname like 'li%'
+
+## Rank by each course's score and show rank, Score ties are assigned the same rank, with the consecutive ranking(s)
+
+```sql
+select GId,
+       score,
+       dense_rank() over (partition by CId order by score DESC)
+from grade;
+```
+
+##  Find first two highest scores for each course.
+
+```sql
+SELECT *
+FROM
+  (SELECT GId,
+          score,
+          CId,
+          row_number() over (partition BY CId
+                             ORDER BY score DESC) AS rank_num
+   FROM grade) AS tbl
+JOIN student
+  ON (tbl.GId = student.SId)
+WHERE rank_num <= 2
+ORDER BY CId;
+```
 
 6. 查询学过「张三」老师授课的同学的信息
 
@@ -283,19 +353,7 @@ from grade as g1 join course c1 on (g1.CId = c1.CId)
 GROUP BY g1.CId
 ORDER BY count(*) DESC, g1.CId
 
-15. 按各科成绩进行排序，并显示排名， Score 重复时保留名次空缺
 
-select GId,
-       score,
-       rank() over (partition by CId order by score DESC)
-from grade;
-
-15.1 按各科成绩进行排序，并显示排名， Score 重复时合并名次
-
-select GId,
-       score,
-       dense_rank() over (partition by CId order by score DESC)
-from grade;
 
 16. 查询学生的总成绩，并进行排名，总分重复时保留名次空缺
 
@@ -473,14 +531,7 @@ LIMIT 1
 Should be very similar to the previous two
 
 
-36. 查询每门功成绩最好的前两名
 
-select * from
-(select GId,
-score,
-row_number() over (partition by CId order by score DESC) as rank_num
-from grade) as tbl join student on (tbl.GId = student.SId)
-where rank_num <= 2;
 
 38. 检索至少选修两门课程的学生学号
 
