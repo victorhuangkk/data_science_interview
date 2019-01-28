@@ -9,8 +9,23 @@
 
 ----
 ## How to use this file?
-Feel free to comment on it or use it as your study/review material for SQL. 
+Feel free to comment on it or use it as your study/review material for SQL.
 
+## Who is the target audience?
+This summary is for data analyst/business analyst/market analyst. So, if you are computer science expert, you may feel it is a bit too easy.
+
+## Personal Summary
+
+SQL is similar to plain English. So, we should obey its internal grammar. Although you may not be a native speaker, SQL should make sense to you if we do some anatommy. So, please follow me and take a breathtaking journey.
+
+
+## Select
+
+```sql
+SELECT *
+  FROM table
+```
+This simple query will show you all the content
 
 ## Thanks
-I would appreciate any comment and suggestion. 
+I would appreciate any comment and suggestion.
