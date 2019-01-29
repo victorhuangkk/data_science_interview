@@ -1,6 +1,6 @@
 ## SQL 50 Problems.
 
-# Please follow the commands here to create your own tables in for the SQL 50 Problems
+# Please follow the commands here to create your own tables for the these Problems
 
 Create student table
 ``` sql
@@ -57,11 +57,9 @@ insert into grade values('07' , '02' , 89)
 insert into grade values('07' , '03' , 98)
 ```
 
-
-
 # Join Table
 
-## 1 Find when a student register both course '01' and course '02'.
+## 1. Find when a student register both course '01' and course '02'.
 
 Logic: To find common entries in two tables, we should naturally use inner join.
 
@@ -79,7 +77,7 @@ JOIN
 
 ```
 
-## 2 Find entries whose course '01' has higher score than course '02'
+## 2. Find entries whose course '01' has higher score than course '02'
 
 Logic: Obviously, this is a self-join problem. On column in the table shows course number and another shows the score. So, we can solve it by creating one table containing score for class 1 and another table contain score for class 2. Then, join these two tables by students' ID. After that, student's info can be found in student table. We just do a simple inner join to find out students' info as requsted.
 
@@ -101,7 +99,7 @@ JOIN student s1
 ### Remarks
 The previous two queries funcion similarly. However, we always want to filter as early as possible. In marketing, this is calles marketing funnel.
 
-## Find entries when course '01' exist but course '02' may not exist.
+## 3. Find entries when course '01' exist but course '02' may not exist.
 
 Logic: This is when we should use left(right) join.
 
@@ -118,7 +116,7 @@ left join
   ON g1.GId = g2.GId;
 ```
 
-## Find entries when course '01' do not exist but course '02' exist.
+## 4. Find entries when course '01' do not exist but course '02' exist.
 
 Logic: This case is to find out difference set. However, MySQL dosen't support direct differencing calculation. So, we can use left(right) join to find out null values. Then, use where to constrain that.
 
@@ -150,7 +148,7 @@ WHERE CId = '02'
      WHERE CId = '01');
 ```
 
-## Find records with students who have score in grade table.
+## 5. Find records with students who have score in grade table.
 
 Logic: Very similar to previous question. Just use similar
 
@@ -164,11 +162,9 @@ JOIN student
 
 ```
 
-
-
 # Simple Select
 
-## Find students' info who have records in grade table.
+## 1. Find students' info who have records in grade table.
 
 Logic: Use subquery to select student's ID number in grade table. Add this condition as contraints in where predicates of the main query.
 
@@ -180,12 +176,26 @@ WHERE SId in
      FROM grade);
 ```
 
-## Find the number of teacher who's last name is 'li'.
+## 2. Find the number of teacher who's last name is 'li'.
 
 ```sql
 select count(TId)
 from teacher
 where Tname like 'li%'
+```
+
+## 3. Find students' info for who have taken instructor 'zhangsan''s class.
+
+Logic: instructor 'zhangsan' is the key to filter. There are two ways. We may use several subqueries to do the filter. However, it may not be computationally effective. So, the query may be rewritten by joins.
+
+```sql
+select * from student where
+SId in(
+select GId from grade where CId =
+(select CId from course where TId =
+(select TId from teacher
+where Tname = 'zhangsan')
+));
 ```
 
 # Aggregate Functions
@@ -222,7 +232,7 @@ on (tbl1.GId = s1.SId);
 
 # Window Function
 
-## Rank by each course's score and show rank, Score ties are assigned the same rank, with the next ranking(s) skipped
+## 1. Rank by each course's score and show rank, Score ties are assigned the same rank, with the next ranking(s) skipped
 
  ```sql
 select GId,
@@ -232,7 +242,7 @@ from grade;
 ```
 
 
-## Rank by each course's score and show rank, Score ties are assigned the same rank, with the consecutive ranking(s)
+## 2. Rank by each course's score and show rank, Score ties are assigned the same rank, with the consecutive ranking(s)
 
 ```sql
 select GId,
@@ -241,7 +251,7 @@ select GId,
 from grade;
 ```
 
-##  Find first two highest scores for each course.
+## 3. Find first two highest scores for each course.
 
 ```sql
 SELECT *
@@ -258,15 +268,9 @@ WHERE rank_num <= 2
 ORDER BY CId;
 ```
 
-6. 查询学过「张三」老师授课的同学的信息
 
-select * from student where
-SId in(
-select GId from grade where CId =
-(select CId from course where TId =
-(select TId from teacher
-where Tname = 'zhangsan')
-));
+
+
 
 7. 查询没有学全所有课程的同学的信息
 
@@ -389,15 +393,7 @@ select grade.CId,
 from grade
 GROUP BY grade.CId) as t1 on course.CId=t1.CId
 
-18. 查询各科成绩前三名的记录
 
-select GId, grade_rank, score from
-(select GId,
-       CId,
-       score,
-       row_number() over (partition by CId order by score DESC) AS grade_rank
-from grade) as temp
-where grade_rank <= 3
 
 19. 查询每门课程被选修的学生数
 
