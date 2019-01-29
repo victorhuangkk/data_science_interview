@@ -1,6 +1,6 @@
-## SQL 50 Problems.
 <link rel="stylesheet" type="text/css" href="auto-number-title.css" />
-# Please follow the commands here to create your own tables for the these Problems
+# SQL 50 Problems.
+## Please follow the commands here to create your own tables for the these Problems
 
 Create student table
 ``` sql
@@ -57,9 +57,9 @@ insert into grade values('07' , '02' , 89)
 insert into grade values('07' , '03' , 98)
 ```
 
-# Join Table
+## Join Table
 
-##  Find when a student register both course '01' and course '02'.
+###  Find when a student register both course '01' and course '02'.
 
 Logic: To find common entries in two tables, we should naturally use inner join.
 
@@ -77,7 +77,7 @@ JOIN
 
 ```
 
-##  Find entries whose course '01' has higher score than course '02'
+###  Find entries whose course '01' has higher score than course '02'
 
 Logic: Obviously, this is a self-join problem. On column in the table shows course number and another shows the score. So, we can solve it by creating one table containing score for class 1 and another table contain score for class 2. Then, join these two tables by students' ID. After that, student's info can be found in student table. We just do a simple inner join to find out students' info as requsted.
 
@@ -96,10 +96,10 @@ JOIN student s1
   ON tbl1.GId = s1.SId;
 ```
 
-### Remarks
+#### Remarks
 The previous two queries funcion similarly. However, we always want to filter as early as possible. In marketing, this is calles marketing funnel.
 
-## Find entries when course '01' exist but course '02' may not exist.
+### Find entries when course '01' exist but course '02' may not exist.
 
 Logic: This is when we should use left(right) join.
 
@@ -116,7 +116,7 @@ left join
   ON g1.GId = g2.GId;
 ```
 
-## Find entries when course '01' do not exist but course '02' exist.
+### Find entries when course '01' do not exist but course '02' exist.
 
 Logic: This case is to find out difference set. However, MySQL dosen't support direct differencing calculation. So, we can use left(right) join to find out null values. Then, use where to constrain that.
 
@@ -148,7 +148,7 @@ WHERE CId = '02'
      WHERE CId = '01');
 ```
 
-## Find records with students who have score in grade table.
+### Find records with students who have score in grade table.
 
 Logic: Very similar to previous question. Just use similar
 
@@ -162,7 +162,7 @@ JOIN student
 
 ```
 
-## Find all students' info with their registration info, regardless how many classes they registered.
+### Find all students' info with their registration info, regardless how many classes they registered.
 
 ```sql
 SELECT *
@@ -173,7 +173,7 @@ JOIN course c1
   ON g1.CId = c1.CId;
 ```
 
-## Find students's name, course ID and score for whom have at least one class is above 70.
+### Find students's name, course ID and score for whom have at least one class is above 70.
 
 ```sql
 SELECT g1.GId,
@@ -188,7 +188,7 @@ JOIN course c1
   WHERE score > 70;
 ```
 
-## Select failed courses
+### Select failed courses
 ```sql
 SELECT s1.Sname,
        c1.Cname,
@@ -201,7 +201,7 @@ JOIN course c1
   WHERE score <= 60;
 ```
 
-## Find students' name and ID of their course number '01' and with score higher than 80.
+### Find students' name and ID of their course number '01' and with score higher than 80.
 
 ```sql
 SELECT s1.SId,
@@ -213,7 +213,7 @@ JOIN student s1
     AND CId= '01';
 ```
 
-## Find students' name and ID who took shuxue class and score is less than 60.
+### Find students' name and ID who took shuxue class and score is less than 60.
 
 ```sql
 SELECT Sname,
@@ -227,7 +227,7 @@ WHERE CId =
   AND score < 60;
 ```
 
-## Find students' name who didn't register any class taught my 'zhangsan'.
+### Find students' name who didn't register any class taught my 'zhangsan'.
 
 Logic: This is a computational better way, compared with subqueries.
 
@@ -261,7 +261,7 @@ WHERE SId not in
                WHERE Tname = 'zhangsan')) );
 ```
 
-## Find the number of students in each class.
+### Find the number of students in each class.
 
 ```sql
 SELECT CId,
@@ -270,7 +270,7 @@ FROM grade
 GROUP BY CId;
 ```
 
-## Find students who register exactly two classes.
+### Find students who register exactly two classes.
 
 ```sql
 SELECT SId,
@@ -283,7 +283,7 @@ WHERE SId in
      HAVING count(CId) = 2);
 ```
 
-## Find the number of male and female students.
+### Find the number of male and female students.
 
 ```sql
 SELECT Sgender,
@@ -292,7 +292,7 @@ FROM student
 GROUP BY Sgender;
 ```
 
-## Find a list of people who have the same and count the number.
+### Find a list of people who have the same and count the number.
 
 Logic: It is an example of implicit self join.
 
@@ -304,9 +304,9 @@ WHERE s1.SId != s2.SId
   AND s1.SName = s2.SName;
 ```
 
-# Simple Select
+## Simple Select
 
-## Find students' info who have records in grade table.
+### Find students' info who have records in grade table.
 
 Logic: Use subquery to select student's ID number in grade table. Add this condition as contraints in where predicates of the main query.
 
@@ -318,7 +318,7 @@ WHERE SId in
      FROM grade);
 ```
 
-## Find the number of teacher who's last name is 'li'.
+### Find the number of teacher who's last name is 'li'.
 
 ```sql
 SELECT count(TId)
@@ -326,14 +326,14 @@ FROM teacher
 WHERE Tname like 'li%';
 ```
 
-## Find students' info whose name has feng
+### Find students' info whose name has feng
 ```sql
 SELECT *
 FROM student
 WHERE SName like '%feng%';
 ```
 
-## Find students' info for who have taken instructor 'zhangsan''s class.
+### Find students' info for who have taken instructor 'zhangsan''s class.
 
 Logic: instructor 'zhangsan' is the key to filter. There are two ways. We may use several subqueries to do the filter. However, it may not be computationally effective. So, the query may be rewritten by joins.
 
@@ -352,9 +352,9 @@ WHERE SId in
                WHERE Tname = 'zhangsan') ));
 ```
 
-# Aggregate Functions
+## Aggregate Functions
 
-## Find records with average socre is at least 60 with students' info and average score.
+### Find records with average socre is at least 60 with students' info and average score.
 
 ```sql
 SELECT SId,
@@ -371,7 +371,7 @@ JOIN student
 ORDER BY AveScore DESC;
 ```
 
-## Find all students' ID, name, number of registered courses and total score for all courses (no score use null)
+### Find all students' ID, name, number of registered courses and total score for all courses (no score use null)
 
 Logic: We used two tables in this example. Use student table to fetch all students' information and use grade table to select score that they get from every course.
 
@@ -390,7 +390,7 @@ right join student AS s1
 ```
 
 
-## Find students' info for whom do not register all courses.
+### Find students' info for whom do not register all courses.
 
 Logic: Add criteria in having (similar to where) to filter a subquery.
 
@@ -407,7 +407,7 @@ WHERE SId not in
 ```
 
 
-## Find students' info who register at least one same class with student '01'.
+### Find students' info who register at least one same class with student '01'.
 
 Logic: The trick here good. Create a criteria to include all the classes that student '01'
 regitered. Then, sum them up to compare with other students.
@@ -426,7 +426,7 @@ GROUP BY g1.GId
 HAVING sum(g1.CId) >= 0);
 ```
 
-## Find students' info who register exactly the same class with student '01'
+### Find students' info who register exactly the same class with student '01'
 
 ```sql
 SELECT s1.*
@@ -445,7 +445,7 @@ HAVING sum(g1.CId) >=
    WHERE GId = '01');
 ```
 
-## Search students' info for whom register all classes.
+### Search students' info for whom register all classes.
 
 ```sql
 SELECT *
@@ -459,7 +459,7 @@ WHERE SId in
         FROM course));
 ```
 
-## Search students' ID for who register more than 2 classes.
+### Search students' ID for who register more than 2 classes.
 
 ```sql
 SELECT SId,
@@ -472,7 +472,7 @@ FROM student join
   ON (student.SId = tbl.GId);
 ```
 
-## Rank students' by their classes' score and average score
+### Rank students' by their classes' score and average score
 
 ```sql
 SELECT *
@@ -486,7 +486,7 @@ right join grade
   ON (tbl1.GId = grade.GId)
 ```
 
-## Find each class's average score, order by average in desceding order and order by class ID in ascending order.
+### Find each class's average score, order by average in desceding order and order by class ID in ascending order.
 
 ```sql
 SELECT grade.CId,
@@ -500,7 +500,7 @@ ORDER BY grade_ave DESC,
          CId;
 ```
 
-## Find students' ID, name and average score higher or equal to 85.
+### Find students' ID, name and average score higher or equal to 85.
 
 ```sql
 SELECT grade.GId,
@@ -514,7 +514,7 @@ HAVING grade_ave >= 80
 ORDER BY grade_ave DESC;
 ```
 
-## 检索" 01 "课程分数小于 60，按分数降序排列的学生信息
+### 检索" 01 "课程分数小于 60，按分数降序排列的学生信息
 
 select * from
 (select GId, avg(score) as average
@@ -523,19 +523,19 @@ group by GId
 order by average DESC) as tbl1 right join grade on (tbl1.GId = grade.GId)
 
 
-## 求每门课程的学生人数
+### 求每门课程的学生人数
 
 select CId,
 count(CId) as 'students_num'
 from grade
 group by CId;
 
-# Window Function
+## Window Function
 
 Basic: func() over (partition by A order by B)
 A is the second order column, B is the first order column or raw data column.
 
-## Rank by each course's score and show rank, Score ties are assigned the same rank, with the next ranking(s) skipped
+### Rank by each course's score and show rank, Score ties are assigned the same rank, with the next ranking(s) skipped
 
  ```sql
  SELECT GId,
@@ -545,7 +545,7 @@ A is the second order column, B is the first order column or raw data column.
  FROM grade;
 ```
 
-## Rank by each course's score and show rank, Score ties are assigned the same rank, with the consecutive ranking(s)
+### Rank by each course's score and show rank, Score ties are assigned the same rank, with the consecutive ranking(s)
 
 ```sql
 SELECT GId,
@@ -555,7 +555,7 @@ SELECT GId,
 FROM grade;
 ```
 
-## Find first two highest scores for each course.
+### Find first two highest scores for each course.
 
 Logic: The highest two could be filtered by window function. Apply rank function to these columns.
 
@@ -574,7 +574,7 @@ WHERE rank_num <= 2
 ORDER BY CId;
 ```
 
-## Find students' total score, rank them. If tie, leave blank/ If tie, do consecutive ranking.
+### Find students' total score, rank them. If tie, leave blank/ If tie, do consecutive ranking.
 
 Logic: ranking is done by rank() function in MySQL. Even though it could be done by custom variable, rank() is easier.
 
@@ -600,9 +600,9 @@ GROUP BY GId
 ORDER BY sum(score) DESC;
 ```
 
-# SQL Logic Statement
+## SQL Logic Statement
 
-## Find The Following Data：
+### Find The Following Data：
 
 Include: Class ID, Class Name, Highest Score, Lowest Score, Average Score, Pass rate, C rate, B rate, A rate,
 numer of students registered. Order by register number in descending and class ID ascending.
@@ -647,7 +647,7 @@ GROUP BY g1.CId
 ORDER BY count(*) DESC, g1.CId
 ```
 
-## Find students's ID, name and average score for who dosen't pass two or more classes.
+### Find students's ID, name and average score for who dosen't pass two or more classes.
 
 Logic:
 
@@ -666,7 +666,7 @@ HAVING sum(CASE
 ```
 
 
-## 统计各科成绩各分数段人数：课程编号，课程名称，[100-85]，[85-70]，[70-60]，[60-0] 及所占百分比
+### 统计各科成绩各分数段人数：课程编号，课程名称，[100-85]，[85-70]，[70-60]，[60-0] 及所占百分比
 
 Find
 
@@ -697,7 +697,7 @@ LEFT JOIN
   ON course.CId=t1.CId;
 ```
 
-## Count the number of students in each class (greater than 5 students)
+### Count the number of students in each class (greater than 5 students)
 
 ```sql
 SELECT CId,
@@ -711,7 +711,7 @@ GROUP BY CId;
 
 # SQL Time Functions
 
-## Find a list of students who born at 1990.
+### Find a list of students who born at 1990.
 
 ```sql
 SELECT SId,
@@ -721,7 +721,7 @@ FROM student
 HAVING born_year = '1990';
 ```
 
-## Find students' age, only cares about year.
+### Find students' age, only cares about year.
 
 ```sql
 SELECT Sname,
@@ -729,7 +729,7 @@ SELECT Sname,
 FROM student;
 ```
 
-## Find students' exact age.
+### Find students' exact age.
 
 ```sql
 SELECT Sname,
@@ -737,7 +737,7 @@ SELECT Sname,
 FROM student;
 ```
 
-## Find students' birthday in this week.
+### Find students' birthday in this week.
 
 ```sql
 SELECT *
@@ -745,7 +745,7 @@ FROM student
 WHERE YEARWEEK(student.Sage)=YEARWEEK(CURDATE());
 ```
 
-## Find students' birthday in next week.
+### Find students' birthday in next week.
 
 ```sql
 SELECT *
@@ -753,7 +753,7 @@ FROM student
 WHERE YEARWEEK(student.Sage)=YEARWEEK(CURDATE()) + 1;
 ```
 
-## Find students' birthday in this month.
+### Find students' birthday in this month.
 
 ```sql
 SELECT *
@@ -761,7 +761,7 @@ FROM student
 WHERE month(student.Sage)=month(CURDATE());
 ```
 
-## Find students' birthday in next month.
+### Find students' birthday in next month.
 
 ```sql
 SELECT *
@@ -770,7 +770,7 @@ WHERE month(student.Sage)=month(CURDATE()) + 1;
 ```
 
 
-## 查询不同课程成绩相同的学生的学生编号、课程编号、学生成绩
+### 查询不同课程成绩相同的学生的学生编号、课程编号、学生成绩
 
 select distinct s1.Sname, g1.GId, g1.CId, g1.score
 from grade g1
@@ -779,7 +779,7 @@ inner join student s1 on g1.GId = s1.SId
 where g1.CId != g2.CId
 and g1.score = g2.score;
 
-## 成绩不重复，查询选修「张三」老师所授课程的学生中，成绩最高的学生信息及其成绩
+### 成绩不重复，查询选修「张三」老师所授课程的学生中，成绩最高的学生信息及其成绩
 
 ```sql
 select student.*,grade.score
@@ -791,6 +791,6 @@ and student.SId =grade.GId
 order by grade.GId
 LIMIT 1
 ```
-## 成绩有重复的情况下，查询选修「张三」老师所授课程的学生中，成绩最高的学生信息及其成绩
+### 成绩有重复的情况下，查询选修「张三」老师所授课程的学生中，成绩最高的学生信息及其成绩
 
 Should be very similar to the previous two
