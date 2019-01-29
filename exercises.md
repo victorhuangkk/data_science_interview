@@ -550,21 +550,28 @@ HAVING grade_ave >= 80
 ORDER BY grade_ave DESC;
 ```
 
-* 检索" 01 "课程分数小于 60，按分数降序排列的学生信息
+* Search course '01' grade less than 60 sort by descending order
 
-select * from
-(select GId, avg(score) as average
-from grade
-group by GId
-order by average DESC) as tbl1 right join grade on (tbl1.GId = grade.GId)
+```sql
+SELECT *
+FROM
+    (SELECT GId,
+            avg(score) AS average
+   FROM grade
+   GROUP BY GId
+   ORDER BY average DESC) AS tbl1
+right join grade
+  ON (tbl1.GId = grade.GId);
+```
 
-
-* 求每门课程的学生人数
-
-select CId,
-count(CId) as 'students_num'
-from grade
-group by CId;
+* Find the number of students in every course.
+*
+```sql
+SELECT CId,
+       count(CId) AS 'students_num'
+FROM grade
+GROUP BY CId;
+```
 
 ## Window Function
 
