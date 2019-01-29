@@ -200,7 +200,7 @@ where Tname = 'zhangsan')
 
 # Aggregate Functions
 
-## Find records with average socre is at least 60 with students' info and average score.
+## 1. Find records with average socre is at least 60 with students' info and average score.
 
 ```sql
 SELECT SId,
@@ -217,7 +217,7 @@ JOIN student
 ORDER BY AveScore DESC;
 ```
 
-## Find all students' ID, name, number of registered courses and total score for all courses (no score use null)
+## 2. Find all students' ID, name, number of registered courses and total score for all courses (no score use null)
 
 Logic: We used two tables in this example. Use student table to fetch all students' information and use grade table to select score that they get from every course.
 
@@ -230,28 +230,168 @@ on (tbl1.GId = s1.SId);
 ```
 
 
+## 3. Find students' info for whom do not register all courses.
+
+Logic: Add criteria in having (similar to where) to filter a subquery.
+
+```sql
+SELECT *
+FROM student
+WHERE SId not in
+    (SELECT GId
+     FROM grade
+     GROUP BY GId
+     HAVING count(*) =
+       (SELECT count(CId)
+        FROM course));
+```
+
+
+## 4. Find students' info who register at least one same class with student '01'.
+
+
+Logic: The trick here good. Create a criteria to include all the classes that student '01'
+regitered. Then, sum them up to compare with other students.
+
+```sql
+SELECT s1.*
+FROM grade g1
+JOIN student s1
+  ON (g1.GId = s1.SId)
+WHERE g1.CId in
+    (SELECT CId
+     FROM grade
+     WHERE GId = '01')
+  AND g1.GId != '01'
+GROUP BY g1.GId
+HAVING sum(g1.CId) >= 0);
+```
+
+## 5. Find students' info who register exactly the same class with student '01'
+
+```sql
+SELECT s1.*
+FROM grade g1
+JOIN student s1
+  ON (g1.GId = s1.SId)
+WHERE g1.CId in
+    (SELECT CId
+     FROM grade
+     WHERE GId = '01')
+  AND g1.GId != '01'
+GROUP BY g1.GId
+HAVING sum(g1.CId) >=
+  (SELECT sum(CId)
+   FROM grade
+   WHERE GId = '01');
+```
+
+
+## 6. Find students' name who didn't register any class taught my 'zhangsan'.
+
+Logic: This is a computational better way, compared with subqueries.
+
+```sql
+SELECT s1.SName
+FROM student s1
+JOIN grade g1
+  ON s1.SId = g1.GId
+JOIN course c1
+  ON g1.CId = c1.CId
+JOIN teacher t1
+  ON c1.TId = t1.TId
+  WHERE t1.Tname = 'zhangsan';
+```
+
+Logic: subquery accomplish the same task. It may be more intuitive when first
+approach the problem, but is computationally expensive.
+
+```sql
+SELECT SName
+FROM student
+WHERE SId not in
+    (SELECT GId
+     FROM grade
+     WHERE CId in
+         (SELECT CId
+          FROM course
+          WHERE TId in
+              (SELECT TId
+               FROM teacher
+               WHERE Tname = 'zhangsan')) );
+```
+
+##  Find the number of students in each class.
+
+```sql
+SELECT CId,
+       count(GId)
+FROM grade
+GROUP BY CId;
+```
+
+## Find students who register exactly two classes.
+
+```sql
+SELECT SId,
+       Sname
+FROM student
+WHERE SId in
+    (SELECT GId
+     FROM grade
+     GROUP BY GId
+     HAVING count(CId) = 2);
+```
+
+## Find the number of male and female students.
+
+```sql
+SELECT Sgender,
+       count(*)
+FROM student
+GROUP BY Sgender;
+```
+
+## Find a list of people who have the same and count the number.
+
+Logic: It is an example of implicit self join.
+
+```sql
+SELECT *
+FROM student s1,
+     student s2
+WHERE s1.SId != s2.SId
+  AND s1.SName = s2.SName;
+```
+
 # Window Function
+
+Basic: func() over (partition by A order by B)
+A is the second order column, B is the first order column or raw data column.
 
 ## 1. Rank by each course's score and show rank, Score ties are assigned the same rank, with the next ranking(s) skipped
 
  ```sql
-select GId,
-       score,
-       rank() over (partition by CId order by score DESC)
-from grade;
+ SELECT GId,
+        score,
+        rank() over (partition BY CId
+                     ORDER BY score DESC)
+ FROM grade;
 ```
-
 
 ## 2. Rank by each course's score and show rank, Score ties are assigned the same rank, with the consecutive ranking(s)
 
 ```sql
-select GId,
+SELECT GId,
        score,
-       dense_rank() over (partition by CId order by score DESC)
-from grade;
+       dense_rank() over (partition BY CId
+                          ORDER BY score DESC)
+FROM grade;
 ```
 
 ## 3. Find first two highest scores for each course.
+
+Logic: The highest two could be filtered by window function. Apply rank function to these columns.
 
 ```sql
 SELECT *
@@ -268,55 +408,130 @@ WHERE rank_num <= 2
 ORDER BY CId;
 ```
 
+## 4. Find students' total score, rank them. If tie, leave blank/ If tie, do consecutive ranking.
+
+Logic: ranking is done by rank() function in MySQL. Even though it could be done by custom variable, rank() is easier.
+
+```sql
+SELECT GId,
+       sum(score),
+       rank() OVER (
+                    ORDER BY sum(score) DESC)
+FROM grade
+GROUP BY GId
+ORDER BY sum(score) DESC;
+```
+
+Logic: The only difference is that consecutive ranking is done by dense_rank() function.
+
+```sql
+SELECT GId,
+       sum(score),
+       dense_rank() OVER (
+                          ORDER BY sum(score) DESC)
+FROM grade
+GROUP BY GId
+ORDER BY sum(score) DESC;
+```
+
+# SQL Logic Statement
+
+## 1. Find The Following Data：
+
+Include: Class ID, Class Name, Highest Score, Lowest Score, Average Score, Pass rate, C rate, B rate, A rate,
+numer of students registered. Order by register number in descending and class ID ascending.
+
+1. A: >= 90
+2. B: 80-90
+3. C: 70-80
+4. Pass >= 60
+
+Logic: The self-defined parameters can be calculated by the combination of the following
+1. sum()/count()
+2. case when then else end
+3. between is easy in most cases but remember between A and B: A < B
+
+```sql
+SELECT g1.CId AS courseID,
+       c1.CName AS courseName,
+       MAX(g1.score)AS max_score,
+       MIN(g1.score)AS min_score,
+       AVG(g1.score)AS ave_score,
+       count(*)AS register_num,
+       sum(CASE
+               WHEN g1.score>=60 then 1
+               ELSE 0
+           END)/count(*)AS pass_rate,
+       sum(CASE
+               WHEN g1.score between 70 AND 80 then 1
+               ELSE 0
+           END)/count(*)AS 'C',
+       sum(CASE
+               WHEN g1.score between 80 AND 90 then 1
+               ELSE 0
+           END)/count(*)AS 'B',
+       sum(CASE
+               WHEN g1.score>=90 then 1
+               ELSE 0
+           END)/count(*)AS 'A'
+FROM grade AS g1
+JOIN course c1
+  ON (g1.CId = c1.CId)
+GROUP BY g1.CId
+ORDER BY count(*) DESC, g1.CId
+```
+
+## 2. Find students's ID, name and average score for who dosen't pass two or more classes.
+
+Logic:
+
+```sql
+SELECT grade.GId,
+       SName,
+       avg(score) AS average
+FROM grade
+JOIN student
+WHERE grade.GId = student.SId
+GROUP BY grade.GId
+HAVING sum(CASE
+               WHEN score < 60 then 1
+               ELSE 0
+           END) >= 2
+```
 
 
+## 3. 统计各科成绩各分数段人数：课程编号，课程名称，[100-85]，[85-70]，[70-60]，[60-0] 及所占百分比
 
+Find
 
-7. 查询没有学全所有课程的同学的信息
+```sql
+select course.Cname,t1.*
+from course LEFT JOIN (
+select grade.CId,
+	   CONCAT(round(sum(case when grade.score between 85 and 100 then 1 else 0 end )/count(*)*100,2),'%')
+       as '[85-100]',
+       CONCAT(round(sum(case when grade.score between 70 and 85 then 1 else 0 end )/count(*)*100,2),'%')
+       as '[70-85)',
+       CONCAT(round(sum(case when grade.score between 60 and 70 then 1 else 0 end )/count(*)*100,2),'%')
+       as '[60-70)',
+       CONCAT(round(sum(case when grade.score between 0 and 60 then 1 else 0 end )/count(*)*100,2),'%')
+       as '[0-60)'
+from grade
+GROUP BY grade.CId) as t1 on course.CId=t1.CId
+```
 
-select * from student
-where SId not in
-(select GId from grade
-group by GId
-having count(*) = (select count(CId) from course));
+## 4. Count the number of students in each class (greater than 5 students)
 
-8. 查询至少有一门课与学号为" 01 "的同学所学相同的同学的信息
+```sql
+select CId,
+(case
+when count(CId) > 5 then count(CId)
+else 'not enough students'
+end) as 'students_num'
+from grade
+group by CId;
+```
 
-select * from student where SId in (
-select distinct grade.GId from grade join
-(select * from grade where GId = '01') as tmp
-on (grade.CId = tmp.CId)
-where grade.GId != '01'
-);
-
-9. 查询和" 01 "号的同学学习的课程 完全相同的其他同学的信息
-
-select GId, sum(CId) from grade
-where CId in (select CId from grade where GId = '01')
-and GId != '01'
-group by GId
-having sum(CId) = (select sum(CId) from grade where GId = '01');
-
-10. 查询没学过"张三"老师讲授的任一门课程的学生姓名
-
-select SName from student
-where SId not in
-(select GId from grade where CId in (
-select CId from course where TId in
-(select TId from teacher where Tname = 'zhangsan'))
-);
-
-11. 查询两门及其以上不及格课程的同学的学号，姓名及其平均成绩
-
-select grade.GId, SName,
-avg(score) as average
-from grade join student where grade.GId = student.SId
-group by grade.GId
-having sum(
-case
-when score < 60 then 1
-else 0
-end ) >= 2
 
 12. 检索" 01 "课程分数小于 60，按分数降序排列的学生信息
 
@@ -335,93 +550,10 @@ group by GId
 order by average DESC) as tbl1
 right join grade on (tbl1.GId = grade.GId)
 
-14. 查询各科成绩最高分、最低分和平均分：
-
-以如下形式显示：课程 ID，课程 name，最高分，最低分，平均分，及格率，中等率，优良率，优秀率
-
-及格为>=60，中等为：70-80，优良为：80-90，优秀为：>=90
-
-要求输出课程号和选修人数，查询结果按人数降序排列，若人数相同，按课程号升序排列
-
-select g1.CId as courseID,
-       c1.CName as courseName,
-       MAX(g1.score)as max_score,
-       MIN(g1.score)as min_score,
-       AVG(g1.score)as ave_score,
-       count(*)as register_num,
-       sum(case when g1.score>=60 then 1 else 0 end )/count(*)as pass_rate,
-       sum(case when g1.score between 70 and 80 then 1 else 0 end )/count(*)as 'C',
-       sum(case when g1.score between 80 and 90 then 1 else 0 end )/count(*)as 'B',
-       sum(case when g1.score>=90 then 1 else 0 end )/count(*)as 'A'
-from grade as g1 join course c1 on (g1.CId = c1.CId)
-GROUP BY g1.CId
-ORDER BY count(*) DESC, g1.CId
-
-
-
-16. 查询学生的总成绩，并进行排名，总分重复时保留名次空缺
-
-select GId,
-	   sum(score),
-       rank() OVER (ORDER BY sum(score) DESC)
-from grade
-GROUP BY GId
-ORDER BY sum(score) desc;
-
-16.1 查询学生的总成绩，并进行排名，总分重复时不保留名次空缺
-
-select GId,
-	   sum(score),
-       dense_rank() OVER (ORDER BY sum(score) DESC)
-from grade
-GROUP BY GId
-ORDER BY sum(score) desc;
-
-17. 统计各科成绩各分数段人数：课程编号，课程名称，[100-85]，[85-70]，[70-60]，[60-0] 及所占百分比
-
-select course.Cname,t1.*
-from course LEFT JOIN (
-select grade.CId,
-	   CONCAT(round(sum(case when grade.score between 85 and 100 then 1 else 0 end )/count(*)*100,2),'%')
-       as '[85-100]',
-       CONCAT(round(sum(case when grade.score between 70 and 85 then 1 else 0 end )/count(*)*100,2),'%')
-       as '[70-85)',
-       CONCAT(round(sum(case when grade.score between 60 and 70 then 1 else 0 end )/count(*)*100,2),'%')
-       as '[60-70)',
-       CONCAT(round(sum(case when grade.score between 0 and 60 then 1 else 0 end )/count(*)*100,2),'%')
-       as '[0-60)'
-from grade
-GROUP BY grade.CId) as t1 on course.CId=t1.CId
-
-
-
-19. 查询每门课程被选修的学生数
-
-select CId, count(GId)
-from grade
-group by CId;
-
-20. 查询出只选修两门课程的学生学号和姓名
-
-select SId, Sname from student
-where SId in
-(select GId
-from grade
-group by GId
-having count(CId) = 2);
-
-21. 查询男生、女生人数
-
-select Sgender, count(*) from student group by Sgender
-
 22. 查询名字中含有「风」字的学生信息
 
 select * from student where SName like '%feng%'
 
-23. 查询同名同性学生名单，并统计同名人数
-
-select * from student s1, student s2
-where s1.SId != s2.SId and s1.SName = s2.SName
 
 24. 查询 1990 年出生的学生名单
 
@@ -492,15 +624,6 @@ count(CId) as 'students_num'
 from grade
 group by CId;
 
-37. 统计每门课程的学生选修人数（超过 5 人的课程才统计）
-
-select CId,
-(case
-when count(CId) > 5 then count(CId)
-else 'not enough students'
-end) as 'students_num'
-from grade
-group by CId;
 
 35. 查询不同课程成绩相同的学生的学生编号、课程编号、学生成绩
 
@@ -525,7 +648,6 @@ LIMIT 1
 34. 成绩有重复的情况下，查询选修「张三」老师所授课程的学生中，成绩最高的学生信息及其成绩
 
 Should be very similar to the previous two
-
 
 
 
