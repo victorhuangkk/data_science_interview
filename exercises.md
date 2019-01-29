@@ -1,5 +1,6 @@
 <link rel="stylesheet" type="text/css" href="auto-number-title.css" />
 # SQL 50 Problems.
+
 ## Please follow the commands here to create your own tables for the these Problems
 
 Create student table
@@ -57,9 +58,57 @@ insert into grade values('07' , '02' , 89)
 insert into grade values('07' , '03' , 98)
 ```
 
-## Join Table
+## Simple Select
 
-###  Find when a student register both course '01' and course '02'.
+### 1. Find students' info who have records in grade table.
+
+Logic: Use subquery to select student's ID number in grade table. Add this condition as contraints in where predicates of the main query.
+
+```sql
+SELECT *
+FROM student
+WHERE SId in
+    (SELECT distinct GId
+     FROM grade);
+```
+
+### * Find the number of teacher who's last name is 'li'.
+
+```sql
+SELECT count(TId)
+FROM teacher
+WHERE Tname like 'li%';
+```
+
+### *  Find students' info whose name has feng
+```sql
+SELECT *
+FROM student
+WHERE SName like '%feng%';
+```
+
+### * Find students' info for who have taken instructor 'zhangsan''s class.
+
+Logic: instructor 'zhangsan' is the key to filter. There are two ways. We may use several subqueries to do the filter. However, it may not be computationally effective. So, the query may be rewritten by joins.
+
+```sql
+SELECT *
+FROM student
+WHERE SId in
+    (SELECT GId
+     FROM grade
+     WHERE CId =
+         (SELECT CId
+          FROM course
+          WHERE TId =
+              (SELECT TId
+               FROM teacher
+               WHERE Tname = 'zhangsan') ));
+```
+
+## * Join Table
+
+### Find when a student register both course '01' and course '02'.
 
 Logic: To find common entries in two tables, we should naturally use inner join.
 
@@ -77,7 +126,7 @@ JOIN
 
 ```
 
-###  Find entries whose course '01' has higher score than course '02'
+### * Find entries whose course '01' has higher score than course '02'
 
 Logic: Obviously, this is a self-join problem. On column in the table shows course number and another shows the score. So, we can solve it by creating one table containing score for class 1 and another table contain score for class 2. Then, join these two tables by students' ID. After that, student's info can be found in student table. We just do a simple inner join to find out students' info as requsted.
 
@@ -99,7 +148,7 @@ JOIN student s1
 #### Remarks
 The previous two queries funcion similarly. However, we always want to filter as early as possible. In marketing, this is calles marketing funnel.
 
-### Find entries when course '01' exist but course '02' may not exist.
+### * Find entries when course '01' exist but course '02' may not exist.
 
 Logic: This is when we should use left(right) join.
 
@@ -304,52 +353,36 @@ WHERE s1.SId != s2.SId
   AND s1.SName = s2.SName;
 ```
 
-## Simple Select
-
-### Find students' info who have records in grade table.
-
-Logic: Use subquery to select student's ID number in grade table. Add this condition as contraints in where predicates of the main query.
+### Find students' info for whom earned the same score for different classes
 
 ```sql
-SELECT *
-FROM student
-WHERE SId in
-    (SELECT distinct GId
-     FROM grade);
+SELECT distinct s1.Sname,
+                g1.GId,
+                g1.CId,
+                g1.score
+FROM grade g1
+inner join grade g2
+  ON g1.GId = g2.GId
+inner join student s1
+  ON g1.GId = s1.SId
+  WHERE g1.CId != g2.CId
+    AND g1.score = g2.score;
 ```
 
-### Find the number of teacher who's last name is 'li'.
+### Search for students' info for whom taook 'zhangsan''s class and had the highest score.
 
 ```sql
-SELECT count(TId)
-FROM teacher
-WHERE Tname like 'li%';
-```
-
-### Find students' info whose name has feng
-```sql
-SELECT *
-FROM student
-WHERE SName like '%feng%';
-```
-
-### Find students' info for who have taken instructor 'zhangsan''s class.
-
-Logic: instructor 'zhangsan' is the key to filter. There are two ways. We may use several subqueries to do the filter. However, it may not be computationally effective. So, the query may be rewritten by joins.
-
-```sql
-SELECT *
-FROM student
-WHERE SId in
-    (SELECT GId
-     FROM grade
-     WHERE CId =
-         (SELECT CId
-          FROM course
-          WHERE TId =
-              (SELECT TId
-               FROM teacher
-               WHERE Tname = 'zhangsan') ));
+SELECT student.*,
+       grade.score
+FROM student,
+     course,
+     teacher,
+     grade
+WHERE course.CId=grade.CId
+  AND course.TId=teacher.TId
+  AND teacher.Tname='zhangsan'
+  AND student.SId =grade.GId
+ORDER BY grade.GId LIMIT 1;
 ```
 
 ## Aggregate Functions
@@ -768,29 +801,3 @@ SELECT *
 FROM student
 WHERE month(student.Sage)=month(CURDATE()) + 1;
 ```
-
-
-### 查询不同课程成绩相同的学生的学生编号、课程编号、学生成绩
-
-select distinct s1.Sname, g1.GId, g1.CId, g1.score
-from grade g1
-inner join grade g2 on g1.GId = g2.GId
-inner join student s1 on g1.GId = s1.SId
-where g1.CId != g2.CId
-and g1.score = g2.score;
-
-### 成绩不重复，查询选修「张三」老师所授课程的学生中，成绩最高的学生信息及其成绩
-
-```sql
-select student.*,grade.score
-from student ,course ,teacher ,grade
-where course.CId=grade.CId
-and course.TId=teacher.TId
-and teacher.Tname='zhangsan'
-and student.SId =grade.GId
-order by grade.GId
-LIMIT 1
-```
-### 成绩有重复的情况下，查询选修「张三」老师所授课程的学生中，成绩最高的学生信息及其成绩
-
-Should be very similar to the previous two
