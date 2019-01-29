@@ -1,5 +1,5 @@
 ## SQL 50 Problems.
-
+<link rel="stylesheet" type="text/css" href="auto-number-title.css" />
 # Please follow the commands here to create your own tables for the these Problems
 
 Create student table
@@ -59,7 +59,7 @@ insert into grade values('07' , '03' , 98)
 
 # Join Table
 
-## 1. Find when a student register both course '01' and course '02'.
+##  Find when a student register both course '01' and course '02'.
 
 Logic: To find common entries in two tables, we should naturally use inner join.
 
@@ -77,7 +77,7 @@ JOIN
 
 ```
 
-## 2. Find entries whose course '01' has higher score than course '02'
+##  Find entries whose course '01' has higher score than course '02'
 
 Logic: Obviously, this is a self-join problem. On column in the table shows course number and another shows the score. So, we can solve it by creating one table containing score for class 1 and another table contain score for class 2. Then, join these two tables by students' ID. After that, student's info can be found in student table. We just do a simple inner join to find out students' info as requsted.
 
@@ -99,7 +99,7 @@ JOIN student s1
 ### Remarks
 The previous two queries funcion similarly. However, we always want to filter as early as possible. In marketing, this is calles marketing funnel.
 
-## 3. Find entries when course '01' exist but course '02' may not exist.
+## Find entries when course '01' exist but course '02' may not exist.
 
 Logic: This is when we should use left(right) join.
 
@@ -116,7 +116,7 @@ left join
   ON g1.GId = g2.GId;
 ```
 
-## 4. Find entries when course '01' do not exist but course '02' exist.
+## Find entries when course '01' do not exist but course '02' exist.
 
 Logic: This case is to find out difference set. However, MySQL dosen't support direct differencing calculation. So, we can use left(right) join to find out null values. Then, use where to constrain that.
 
@@ -148,7 +148,7 @@ WHERE CId = '02'
      WHERE CId = '01');
 ```
 
-## 5. Find records with students who have score in grade table.
+## Find records with students who have score in grade table.
 
 Logic: Very similar to previous question. Just use similar
 
@@ -162,132 +162,72 @@ JOIN student
 
 ```
 
-# Simple Select
-
-## 1. Find students' info who have records in grade table.
-
-Logic: Use subquery to select student's ID number in grade table. Add this condition as contraints in where predicates of the main query.
+## Find all students' info with their registration info, regardless how many classes they registered.
 
 ```sql
 SELECT *
-FROM student
-WHERE SId in
-    (SELECT distinct GId
-     FROM grade);
+FROM student s1
+JOIN grade g1
+  ON s1.SId = g1.GId
+JOIN course c1
+  ON g1.CId = c1.CId;
 ```
 
-## 2. Find the number of teacher who's last name is 'li'.
+## Find students's name, course ID and score for whom have at least one class is above 70.
 
 ```sql
-select count(TId)
-from teacher
-where Tname like 'li%'
-```
-
-## 3. Find students' info for who have taken instructor 'zhangsan''s class.
-
-Logic: instructor 'zhangsan' is the key to filter. There are two ways. We may use several subqueries to do the filter. However, it may not be computationally effective. So, the query may be rewritten by joins.
-
-```sql
-select * from student where
-SId in(
-select GId from grade where CId =
-(select CId from course where TId =
-(select TId from teacher
-where Tname = 'zhangsan')
-));
-```
-
-# Aggregate Functions
-
-## 1. Find records with average socre is at least 60 with students' info and average score.
-
-```sql
-SELECT SId,
-       Sname,
-       AveScore
-FROM
-  (SELECT GId,
-          avg(score) AS AveScore
-   FROM grade
-   GROUP BY GId
-   HAVING AveScore >= 60) AS tbl1
-JOIN student
-  ON tbl1.GId = student.SId
-ORDER BY AveScore DESC;
-```
-
-## 2. Find all students' ID, name, number of registered courses and total score for all courses (no score use null)
-
-Logic: We used two tables in this example. Use student table to fetch all students' information and use grade table to select score that they get from every course.
-
-```sql
-select s1.*, total_courses, total_scores from
-(select GId, count(score) as total_courses, sum(score) as total_scores
-from grade
-group by GId) as tbl1 right join student as s1
-on (tbl1.GId = s1.SId);
-```
-
-
-## 3. Find students' info for whom do not register all courses.
-
-Logic: Add criteria in having (similar to where) to filter a subquery.
-
-```sql
-SELECT *
-FROM student
-WHERE SId not in
-    (SELECT GId
-     FROM grade
-     GROUP BY GId
-     HAVING count(*) =
-       (SELECT count(CId)
-        FROM course));
-```
-
-
-## 4. Find students' info who register at least one same class with student '01'.
-
-
-Logic: The trick here good. Create a criteria to include all the classes that student '01'
-regitered. Then, sum them up to compare with other students.
-
-```sql
-SELECT s1.*
+SELECT g1.GId,
+       s1.SName,
+       g1.score,
+       c1.Cname
 FROM grade g1
 JOIN student s1
   ON (g1.GId = s1.SId)
-WHERE g1.CId in
-    (SELECT CId
-     FROM grade
-     WHERE GId = '01')
-  AND g1.GId != '01'
-GROUP BY g1.GId
-HAVING sum(g1.CId) >= 0);
+JOIN course c1
+  ON (g1.CId = c1.CId)
+  WHERE score > 70;
 ```
 
-## 5. Find students' info who register exactly the same class with student '01'
+## Select failed courses
+```sql
+SELECT s1.Sname,
+       c1.Cname,
+       g1.score
+FROM grade g1
+JOIN student s1
+  ON g1.GId = s1.SId
+JOIN course c1
+  ON g1.CId = c1.CId
+  WHERE score <= 60;
+```
+
+## Find students' name and ID of their course number '01' and with score higher than 80.
 
 ```sql
-SELECT s1.*
+SELECT s1.SId,
+       s1.SName
 FROM grade g1
 JOIN student s1
   ON (g1.GId = s1.SId)
-WHERE g1.CId in
-    (SELECT CId
-     FROM grade
-     WHERE GId = '01')
-  AND g1.GId != '01'
-GROUP BY g1.GId
-HAVING sum(g1.CId) >=
-  (SELECT sum(CId)
-   FROM grade
-   WHERE GId = '01');
+  WHERE score >= 80
+    AND CId= '01';
 ```
 
+## Find students' name and ID who took shuxue class and score is less than 60.
 
-## 6. Find students' name who didn't register any class taught my 'zhangsan'.
+```sql
+SELECT Sname,
+       score
+FROM student s1
+JOIN grade g1 ON (s1.SId = g1.GId)
+WHERE CId =
+    (SELECT CId
+     FROM course
+     WHERE Cname = 'shuxue')
+  AND score < 60;
+```
+
+## Find students' name who didn't register any class taught my 'zhangsan'.
 
 Logic: This is a computational better way, compared with subqueries.
 
@@ -321,7 +261,7 @@ WHERE SId not in
                WHERE Tname = 'zhangsan')) );
 ```
 
-##  Find the number of students in each class.
+## Find the number of students in each class.
 
 ```sql
 SELECT CId,
@@ -364,12 +304,238 @@ WHERE s1.SId != s2.SId
   AND s1.SName = s2.SName;
 ```
 
+# Simple Select
+
+## Find students' info who have records in grade table.
+
+Logic: Use subquery to select student's ID number in grade table. Add this condition as contraints in where predicates of the main query.
+
+```sql
+SELECT *
+FROM student
+WHERE SId in
+    (SELECT distinct GId
+     FROM grade);
+```
+
+## Find the number of teacher who's last name is 'li'.
+
+```sql
+SELECT count(TId)
+FROM teacher
+WHERE Tname like 'li%';
+```
+
+## Find students' info whose name has feng
+```sql
+SELECT *
+FROM student
+WHERE SName like '%feng%';
+```
+
+## Find students' info for who have taken instructor 'zhangsan''s class.
+
+Logic: instructor 'zhangsan' is the key to filter. There are two ways. We may use several subqueries to do the filter. However, it may not be computationally effective. So, the query may be rewritten by joins.
+
+```sql
+SELECT *
+FROM student
+WHERE SId in
+    (SELECT GId
+     FROM grade
+     WHERE CId =
+         (SELECT CId
+          FROM course
+          WHERE TId =
+              (SELECT TId
+               FROM teacher
+               WHERE Tname = 'zhangsan') ));
+```
+
+# Aggregate Functions
+
+## Find records with average socre is at least 60 with students' info and average score.
+
+```sql
+SELECT SId,
+       Sname,
+       AveScore
+FROM
+  (SELECT GId,
+          avg(score) AS AveScore
+   FROM grade
+   GROUP BY GId
+   HAVING AveScore >= 60) AS tbl1
+JOIN student
+  ON tbl1.GId = student.SId
+ORDER BY AveScore DESC;
+```
+
+## Find all students' ID, name, number of registered courses and total score for all courses (no score use null)
+
+Logic: We used two tables in this example. Use student table to fetch all students' information and use grade table to select score that they get from every course.
+
+```sql
+SELECT s1.*,
+       total_courses,
+       total_scores
+FROM
+    (SELECT GId,
+            count(score) AS total_courses,
+            sum(score) AS total_scores
+   FROM grade
+   GROUP BY GId) AS tbl1
+right join student AS s1
+  ON (tbl1.GId = s1.SId);
+```
+
+
+## Find students' info for whom do not register all courses.
+
+Logic: Add criteria in having (similar to where) to filter a subquery.
+
+```sql
+SELECT *
+FROM student
+WHERE SId not in
+    (SELECT GId
+     FROM grade
+     GROUP BY GId
+     HAVING count(*) =
+       (SELECT count(CId)
+        FROM course));
+```
+
+
+## Find students' info who register at least one same class with student '01'.
+
+Logic: The trick here good. Create a criteria to include all the classes that student '01'
+regitered. Then, sum them up to compare with other students.
+
+```sql
+SELECT s1.*
+FROM grade g1
+JOIN student s1
+  ON (g1.GId = s1.SId)
+WHERE g1.CId in
+    (SELECT CId
+     FROM grade
+     WHERE GId = '01')
+  AND g1.GId != '01'
+GROUP BY g1.GId
+HAVING sum(g1.CId) >= 0);
+```
+
+## Find students' info who register exactly the same class with student '01'
+
+```sql
+SELECT s1.*
+FROM grade g1
+JOIN student s1
+  ON (g1.GId = s1.SId)
+WHERE g1.CId in
+    (SELECT CId
+     FROM grade
+     WHERE GId = '01')
+  AND g1.GId != '01'
+GROUP BY g1.GId
+HAVING sum(g1.CId) >=
+  (SELECT sum(CId)
+   FROM grade
+   WHERE GId = '01');
+```
+
+## Search students' info for whom register all classes.
+
+```sql
+SELECT *
+FROM student
+WHERE SId in
+    (SELECT GId
+     FROM grade
+     GROUP BY GId
+     HAVING count(GId) =
+       (SELECT count(*)
+        FROM course));
+```
+
+## Search students' ID for who register more than 2 classes.
+
+```sql
+SELECT SId,
+       Sname
+FROM student join
+    (SELECT GId, count(GId) AS num_courses
+   FROM grade
+   GROUP BY GId
+   HAVING num_courses >= 2) tbl
+  ON (student.SId = tbl.GId);
+```
+
+## Rank students' by their classes' score and average score
+
+```sql
+SELECT *
+FROM
+    (SELECT GId,
+            avg(score) AS average
+   FROM grade
+   GROUP BY GId
+   ORDER BY average DESC) AS tbl1
+right join grade
+  ON (tbl1.GId = grade.GId)
+```
+
+## Find each class's average score, order by average in desceding order and order by class ID in ascending order.
+
+```sql
+SELECT grade.CId,
+       avg(score) AS grade_ave,
+       course.Cname
+FROM grade
+JOIN course
+  ON grade.CId = course.CId
+GROUP BY CId
+ORDER BY grade_ave DESC,
+         CId;
+```
+
+## Find students' ID, name and average score higher or equal to 85.
+
+```sql
+SELECT grade.GId,
+       student.Sname,
+       round(avg(score),2) AS grade_ave
+FROM grade
+JOIN student
+  ON grade.GId = student.SId
+GROUP BY GId
+HAVING grade_ave >= 80
+ORDER BY grade_ave DESC;
+```
+
+## 检索" 01 "课程分数小于 60，按分数降序排列的学生信息
+
+select * from
+(select GId, avg(score) as average
+from grade
+group by GId
+order by average DESC) as tbl1 right join grade on (tbl1.GId = grade.GId)
+
+
+## 求每门课程的学生人数
+
+select CId,
+count(CId) as 'students_num'
+from grade
+group by CId;
+
 # Window Function
 
 Basic: func() over (partition by A order by B)
 A is the second order column, B is the first order column or raw data column.
 
-## 1. Rank by each course's score and show rank, Score ties are assigned the same rank, with the next ranking(s) skipped
+## Rank by each course's score and show rank, Score ties are assigned the same rank, with the next ranking(s) skipped
 
  ```sql
  SELECT GId,
@@ -379,7 +545,7 @@ A is the second order column, B is the first order column or raw data column.
  FROM grade;
 ```
 
-## 2. Rank by each course's score and show rank, Score ties are assigned the same rank, with the consecutive ranking(s)
+## Rank by each course's score and show rank, Score ties are assigned the same rank, with the consecutive ranking(s)
 
 ```sql
 SELECT GId,
@@ -389,7 +555,7 @@ SELECT GId,
 FROM grade;
 ```
 
-## 3. Find first two highest scores for each course.
+## Find first two highest scores for each course.
 
 Logic: The highest two could be filtered by window function. Apply rank function to these columns.
 
@@ -408,7 +574,7 @@ WHERE rank_num <= 2
 ORDER BY CId;
 ```
 
-## 4. Find students' total score, rank them. If tie, leave blank/ If tie, do consecutive ranking.
+## Find students' total score, rank them. If tie, leave blank/ If tie, do consecutive ranking.
 
 Logic: ranking is done by rank() function in MySQL. Even though it could be done by custom variable, rank() is easier.
 
@@ -436,7 +602,7 @@ ORDER BY sum(score) DESC;
 
 # SQL Logic Statement
 
-## 1. Find The Following Data：
+## Find The Following Data：
 
 Include: Class ID, Class Name, Highest Score, Lowest Score, Average Score, Pass rate, C rate, B rate, A rate,
 numer of students registered. Order by register number in descending and class ID ascending.
@@ -481,7 +647,7 @@ GROUP BY g1.CId
 ORDER BY count(*) DESC, g1.CId
 ```
 
-## 2. Find students's ID, name and average score for who dosen't pass two or more classes.
+## Find students's ID, name and average score for who dosen't pass two or more classes.
 
 Logic:
 
@@ -500,132 +666,111 @@ HAVING sum(CASE
 ```
 
 
-## 3. 统计各科成绩各分数段人数：课程编号，课程名称，[100-85]，[85-70]，[70-60]，[60-0] 及所占百分比
+## 统计各科成绩各分数段人数：课程编号，课程名称，[100-85]，[85-70]，[70-60]，[60-0] 及所占百分比
 
 Find
 
 ```sql
-select course.Cname,t1.*
-from course LEFT JOIN (
-select grade.CId,
-	   CONCAT(round(sum(case when grade.score between 85 and 100 then 1 else 0 end )/count(*)*100,2),'%')
-       as '[85-100]',
-       CONCAT(round(sum(case when grade.score between 70 and 85 then 1 else 0 end )/count(*)*100,2),'%')
-       as '[70-85)',
-       CONCAT(round(sum(case when grade.score between 60 and 70 then 1 else 0 end )/count(*)*100,2),'%')
-       as '[60-70)',
-       CONCAT(round(sum(case when grade.score between 0 and 60 then 1 else 0 end )/count(*)*100,2),'%')
-       as '[0-60)'
-from grade
-GROUP BY grade.CId) as t1 on course.CId=t1.CId
+SELECT course.Cname,
+       t1.*
+FROM course
+LEFT JOIN
+    (SELECT grade.CId,
+            CONCAT(round(sum(CASE
+                                 WHEN grade.score between 85 AND 100 then 1
+                                 ELSE 0
+                             END)/count(*)*100,2),'%') AS '[85-100]',
+            CONCAT(round(sum(CASE
+                                 WHEN grade.score between 70 AND 85 then 1
+                                 ELSE 0
+                             END)/count(*)*100,2),'%') AS '[70-85)',
+            CONCAT(round(sum(CASE
+                                 WHEN grade.score between 60 AND 70 then 1
+                                 ELSE 0
+                             END)/count(*)*100,2),'%') AS '[60-70)',
+            CONCAT(round(sum(CASE
+                                 WHEN grade.score between 0 AND 60 then 1
+                                 ELSE 0
+                             END)/count(*)*100,2),'%') AS '[0-60)'
+   FROM grade
+   GROUP BY grade.CId) AS t1
+  ON course.CId=t1.CId;
 ```
 
-## 4. Count the number of students in each class (greater than 5 students)
+## Count the number of students in each class (greater than 5 students)
 
 ```sql
-select CId,
-(case
-when count(CId) > 5 then count(CId)
-else 'not enough students'
-end) as 'students_num'
-from grade
-group by CId;
+SELECT CId,
+       (CASE
+            WHEN count(CId) > 5 then count(CId)
+            ELSE 'not enough students'
+        END) AS 'students_num'
+FROM grade
+GROUP BY CId;
+```
+
+# SQL Time Functions
+
+## Find a list of students who born at 1990.
+
+```sql
+SELECT SId,
+       SName,
+       YEAR(Sage) AS born_year
+FROM student
+HAVING born_year = '1990';
+```
+
+## Find students' age, only cares about year.
+
+```sql
+SELECT Sname,
+       year(curdate()) - year(Sage) AS age
+FROM student;
+```
+
+## Find students' exact age.
+
+```sql
+SELECT Sname,
+       round(DATEDIFF(curdate(), SAge)/365,0) AS age
+FROM student;
+```
+
+## Find students' birthday in this week.
+
+```sql
+SELECT *
+FROM student
+WHERE YEARWEEK(student.Sage)=YEARWEEK(CURDATE());
+```
+
+## Find students' birthday in next week.
+
+```sql
+SELECT *
+FROM student
+WHERE YEARWEEK(student.Sage)=YEARWEEK(CURDATE()) + 1;
+```
+
+## Find students' birthday in this month.
+
+```sql
+SELECT *
+FROM student
+WHERE month(student.Sage)=month(CURDATE());
+```
+
+## Find students' birthday in next month.
+
+```sql
+SELECT *
+FROM student
+WHERE month(student.Sage)=month(CURDATE()) + 1;
 ```
 
 
-12. 检索" 01 "课程分数小于 60，按分数降序排列的学生信息
-
-select * from
-(select GId, avg(score) as average
-from grade
-group by GId
-order by average DESC) as tbl1 right join grade on (tbl1.GId = grade.GId)
-
-13. 按平均成绩从高到低显示所有学生的所有课程的成绩以及平均成绩
-
-select * from
-(select GId, avg(score) as average
-from grade
-group by GId
-order by average DESC) as tbl1
-right join grade on (tbl1.GId = grade.GId)
-
-22. 查询名字中含有「风」字的学生信息
-
-select * from student where SName like '%feng%'
-
-
-24. 查询 1990 年出生的学生名单
-
-select SId, SName, year(Sage) as born_year
-from student
-having born_year = '1990'
-
-25. 查询每门课程的平均成绩，结果按平均成绩降序排列，平均成绩相同时，按课程编号升序排列
-
-select grade.CId,
-	avg(score) as grade_ave,
-    course.Cname
-from grade
-     join course on grade.CId = course.CId
-group by CId
-order by grade_ave DESC, CId;
-
-26. 查询平均成绩大于等于 85 的所有学生的学号、姓名和平均成绩
-
-select grade.GId,
-    student.Sname,
-	round(avg(score),2) as grade_ave
-from grade join student on grade.GId = student.SId
-group by GId
-having grade_ave >= 80
-order by grade_ave DESC;
-
-
-28. 查询所有学生的课程及分数情况（存在学生没成绩，没选课的情况）
-
-select * from student s1
-join grade g1 on s1.SId = g1.GId
-join course c1 on g1.CId = c1.CId
-
-29. 查询任何一门课程成绩在 70 分以上的姓名、课程名称和分数
-
-select g1.GId, s1.SName, g1.score, c1.Cname
-from grade g1
-join student s1 on (g1.GId = s1.SId)
-join course c1 on (g1.CId = c1.CId)
-where score > 70
-
-30. 查询不及格的课程
-
-select s1.Sname, c1.Cname, g1.score from grade g1
-         join student s1 on g1.GId = s1.SId
-         join course c1 on g1.CId = c1.CId
-where score <= 60
-
-31. 查询课程编号为 01 且课程成绩在 80 分以上的学生的学号和姓名
-
-select s1.SId, s1.SName
-from grade g1 join student s1 on (g1.GId = s1.SId)
-where score >= 80
-and CId= '01';
-
-27. 查询课程名称为「数学」，且分数低于 60 的学生姓名和分数
-
-select Sname, score from student s1
-join grade g1 on(s1.SId = g1.GId)
-where CId = (select CId from course where Cname = 'shuxue')
-and score < 60
-
-32. 求每门课程的学生人数
-
-select CId,
-count(CId) as 'students_num'
-from grade
-group by CId;
-
-
-35. 查询不同课程成绩相同的学生的学生编号、课程编号、学生成绩
+## 查询不同课程成绩相同的学生的学生编号、课程编号、学生成绩
 
 select distinct s1.Sname, g1.GId, g1.CId, g1.score
 from grade g1
@@ -634,8 +779,9 @@ inner join student s1 on g1.GId = s1.SId
 where g1.CId != g2.CId
 and g1.score = g2.score;
 
-33. 成绩不重复，查询选修「张三」老师所授课程的学生中，成绩最高的学生信息及其成绩
+## 成绩不重复，查询选修「张三」老师所授课程的学生中，成绩最高的学生信息及其成绩
 
+```sql
 select student.*,grade.score
 from student ,course ,teacher ,grade
 where course.CId=grade.CId
@@ -644,61 +790,7 @@ and teacher.Tname='zhangsan'
 and student.SId =grade.GId
 order by grade.GId
 LIMIT 1
-
-34. 成绩有重复的情况下，查询选修「张三」老师所授课程的学生中，成绩最高的学生信息及其成绩
+```
+## 成绩有重复的情况下，查询选修「张三」老师所授课程的学生中，成绩最高的学生信息及其成绩
 
 Should be very similar to the previous two
-
-
-
-38. 检索至少选修两门课程的学生学号
-
-select SId, Sname from student join(
-select GId,
-count(GId) as num_courses
-from grade
-group by GId
-having num_courses >= 2
-) tbl
-on (student.SId = tbl.GId)
-
-39. 查询选修了全部课程的学生信息
-
-select * from student where SId in
-(select GId
-from grade
-group by GId
-having count(GId) = (select count(*) from course))
-
-40. 查询各学生的年龄，只按年份来算
-
-select Sname, year(curdate()) - year(Sage)  as age
-from student;
-
-41. 按照出生日期来算，当前月日 < 出生年月的月日则，年龄减一
-
-select Sname, round(DATEDIFF(curdate(), SAge)/365,0)  as age from student;
-
-42. 查询本周过生日的学生
-
-select *
-from student
-where YEARWEEK(student.Sage)=YEARWEEK(CURDATE())
-
-43. 查询下周过生日的学生
-
-select *
-from student
-where YEARWEEK(student.Sage)=YEARWEEK(CURDATE()) + 1
-
-44. 查询本月过生日的学生
-
-select *
-from student
-where month(student.Sage)=month(CURDATE())
-
-45. 查询下月过生日的学生
-
-select *
-from student
-where month(student.Sage)=month(CURDATE()) + 1
