@@ -1,20 +1,6 @@
 # Problem
 Several friends at a cinema ticket office would like to reserve consecutive available seats.
 Can you help to query all the consecutive available seats order by the seat_id using the following cinema table?
-| seat_id | free |
-|---------|------|
-| 1       | 1    |
-| 2       | 0    |
-| 3       | 1    |
-| 4       | 1    |
-| 5       | 1    |
-
-Your query should return the following result for the sample case above.
-| seat_id |
-|---------|
-| 3       |
-| 4       |
-| 5       |
 
 # Create Table
 ```sql
@@ -28,7 +14,7 @@ insert into cinema (seat_id, free) values ('5', '1');
 ```
 
 # Solution
-Logic: Use self join to find out consecutive availablity. Since SQL dosen't have for loop, these difference join trick is used to find consecutive values. 
+Logic: Use self join to find out consecutive availablity. Since SQL dosen't have for loop, these difference join trick is used to find consecutive values.
 
 ```sql
 SELECT distinct c1.seat_id
