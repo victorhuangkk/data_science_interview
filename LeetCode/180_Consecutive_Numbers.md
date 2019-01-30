@@ -16,6 +16,7 @@ insert into Logs (Id, Num) values ('6', '2');
 insert into Logs (Id, Num) values ('7', '2');
 ```
 
+
 # Solution
 
 Logic: SQL doesn't have for loop to go through all the elements in the table. However, join with different ID will help us accomplish this task.
