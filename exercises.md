@@ -2,7 +2,7 @@
 
 ## Please follow the commands here to create your own tables for the these Problems
 
-1. Create student table
+* Create student table
 
 ``` sql
 create table student(SId varchar(10),Sname varchar(10),Sage datetime,Sgender varchar(10));
@@ -63,7 +63,7 @@ insert into grade values('07' , '03' , 98)
 
 ## Simple Select
 
-1. Find students' info who have records in grade table.
+* Find students' info who have records in grade table.
 
 Logic: Use subquery to select student's ID number in grade table. Add this condition as contraints in where predicates of the main query.
 
@@ -344,7 +344,7 @@ FROM student
 GROUP BY Sgender;
 ```
 
-* Find a list of people who have the same and count the number.
+* Find a list of students who have the same name and count the number.
 
 Logic: It is an example of implicit self join.
 
