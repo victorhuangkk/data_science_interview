@@ -9,7 +9,9 @@ Write a SQL query to delete all duplicate email entries in a table named Person,
 | 3       | john@example.com |
 
 
-After the query, final table becomes
+After the query, final table becomes   
+
+
 | Id | Email     |
 | :------------- | :------------- |
 | 1       | john@example.com|
@@ -17,7 +19,7 @@ After the query, final table becomes
 
 # Solution
 
-Logic: This is another scenorio to apply self join trick. But this time, it is asked to retain the smaller ID term. So, we need a condition to formulate this criteria. 
+Logic: This is another scenorio to apply self join trick. But this time, it is asked to retain the smaller ID term. So, we need a condition to formulate this criteria.
 
 ```sql
 DELETE p1 FROM Person p1,
