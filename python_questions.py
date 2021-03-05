@@ -37,6 +37,9 @@ def countApperance(inputList):
     return string
 
 def checkPalindrome(string):
+    """
+    verify is a string a palindrome, this task is fast in Python since string can be sliced
+    """
     return string == string[::-1]
 
 def getNum(a):
@@ -66,7 +69,38 @@ def mergeSortedList(left, right):
             result.append(left.pop(0))
     return result + left + right
 
+@lru_cache
+def fibonacci(n):
+    if n == 1 :
+        return 1
+    elif n == 2:
+        return 2
+    elif n > 2:
+        return fibonacci(n-1) + fibonacci(n-2)
+    
 
+def quick_sort(array=arr):
+    low, same, high = [], [], []
+
+    if len(array) > 1:
+        pivot = array[0]
+
+        for element in array:
+
+            if element < pivot:
+                low.append(element)
+
+            elif element == pivot:
+                same.append(element)
+
+            else:
+                high.append(element)
+
+        return quick_sort(low) + same + quick_sort(high)
+
+    else: 
+        return array
+    
 def main():
     # for x in factorial(6):
     #     print(x)
